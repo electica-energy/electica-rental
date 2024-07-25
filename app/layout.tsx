@@ -7,15 +7,9 @@ import "swiper/css/effect-fade";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 import "react-quill/dist/quill.snow.css";
-import { useEffect, useState, createContext, ReactNode } from "react";
+import { useEffect, useState, ReactNode } from "react";
 import ServiceWorker from "@/components/sw/sw";
-
-interface ThemeContextProps {
-  theme: string | null;
-  setTheme: React.Dispatch<React.SetStateAction<string | null>>;
-}
-
-export const ThemeContext = createContext<ThemeContextProps | null>(null);
+import ThemeContext from "@/context/ThemeContext";
 
 interface LayoutProps {
   children: ReactNode;
