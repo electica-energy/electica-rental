@@ -2,12 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getPublicUrl, uploadFileStream } from '../../../utils/gcp';
 import { Readable } from 'stream';
 
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
-
 export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData();
