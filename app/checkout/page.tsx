@@ -119,7 +119,7 @@ export default function Checkout() {
           <CardHeader>
             <CardTitle className="my-4">Continue</CardTitle>
             <CardDescription>
-              By clicking on pay you'll purchase your plan subscription of Rs{" "}
+              By clicking on pay you&apos;ll purchase your plan subscription of Rs{" "}
               {amount}/month
             </CardDescription>
           </CardHeader>
