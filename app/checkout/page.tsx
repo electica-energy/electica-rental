@@ -14,7 +14,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Script from "next/script";
 import { LoaderCircle } from "lucide-react";
 
-export default function Checkout() {
+function CheckoutContent() {
   const router = useRouter();
   const params = useSearchParams();
   const amount = params.get("amount");
@@ -136,5 +136,19 @@ export default function Checkout() {
         </Card>
       </section>
     </>
+  );
+}
+
+export default function Checkout() {
+  return (
+    <React.Suspense
+      fallback={
+        <div className="container h-screen flex justify-center items-center">
+          <LoaderCircle className="animate-spin h-20 w-20 text-primary" />
+        </div>
+      }
+    >
+      <CheckoutContent />
+    </React.Suspense>
   );
 }
