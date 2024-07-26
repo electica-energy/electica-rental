@@ -109,6 +109,8 @@ export async function uploadFileStream(fileStream: Readable, fileName: string): 
   const file = bucket.file(fileName);
   const stream = file.createWriteStream();
 
+  console.log('@@@@@@process.env.CLIENT_EMAIL', process.env.CLIENT_EMAIL)
+
   return new Promise((resolve, reject) => {
     fileStream
       .pipe(stream)

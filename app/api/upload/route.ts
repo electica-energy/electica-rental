@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getPublicUrl, uploadFileStream } from '../../../utils/gcp';
+import { uploadFileStream } from '../../../utils/gcp';
 import { Readable } from 'stream';
 
 export async function POST(req: NextRequest) {
