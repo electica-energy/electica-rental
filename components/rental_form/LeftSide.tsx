@@ -10,8 +10,14 @@ import Spinner from "../ui/Spinner";
 import { CheckIcon } from "@heroicons/react/24/solid";
 import BasicDetailsForm from "../progress_tab/BasicDetailsForm";
 import UploadDocumentsForm from "../progress_tab/UploadDocumentsForm";
+import PreviewPayment from "../progress_tab/PreviewPayment";
 
-function LeftSide({ userForm, setUserForm, selectedFiles, setSelectedFiles }: any) {
+function LeftSide({
+  userForm,
+  setUserForm,
+  selectedFiles,
+  setSelectedFiles,
+}: any) {
   const [currentTab, setCurrentTab] = useState(1);
 
   const [steps, setSteps] = useState([
@@ -43,13 +49,17 @@ function LeftSide({ userForm, setUserForm, selectedFiles, setSelectedFiles }: an
 
   const handleStepChange = (step_id: number, userForm: any) => {
     if (step_id === 2) {
-      if (userForm.name &&
+      if (
+        userForm.name &&
         userForm.phone &&
-        userForm.address.address1 && userForm.address.address2 &&
+        userForm.address.address1 &&
+        userForm.address.address2 &&
         userForm.address.city &&
         userForm.address.landmark &&
-        userForm.address.pincode && userForm.vehicle_name && userForm.vehicle_number) {
-
+        userForm.address.pincode &&
+        userForm.vehicle_name &&
+        userForm.vehicle_number
+      ) {
         setCurrentTab(step_id);
 
         setSteps((prev) =>
@@ -71,10 +81,13 @@ function LeftSide({ userForm, setUserForm, selectedFiles, setSelectedFiles }: an
       if (
         userForm.name &&
         userForm.phone &&
-        userForm.address.address1 && userForm.address.address2 &&
+        userForm.address.address1 &&
+        userForm.address.address2 &&
         userForm.address.city &&
         userForm.address.landmark &&
-        userForm.address.pincode && userForm.vehicle_name && userForm.vehicle_number &&
+        userForm.address.pincode &&
+        userForm.vehicle_name &&
+        userForm.vehicle_number &&
         userForm.profile_pic_url &&
         userForm.uploaded_documents?.aadhar?.front &&
         userForm.uploaded_documents?.aadhar?.back &&
@@ -84,8 +97,8 @@ function LeftSide({ userForm, setUserForm, selectedFiles, setSelectedFiles }: an
       ) {
         setCurrentTab(step_id);
       }
-    }else{
-      setCurrentTab(step_id)
+    } else {
+      setCurrentTab(step_id);
       setSteps((prev) =>
         prev.map((step) => {
           if (step.id === step_id) {
@@ -233,7 +246,7 @@ function LeftSide({ userForm, setUserForm, selectedFiles, setSelectedFiles }: an
             handleStepChange={handleStepChange}
           />
         ) : (
-          <BasicDetailsForm />
+          <PreviewPayment userForm={userForm} setUserForm={setUserForm} />
         )}
 
         {/* <nav className="flex items-center justify-center flex-wrap gap-x-11 pt-24">

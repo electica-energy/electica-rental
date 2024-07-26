@@ -1,7 +1,13 @@
 import { Storage, UploadResponse } from '@google-cloud/storage';
 import { Readable } from 'stream';
 
-const storage = new Storage({ keyFilename: 'cloud-storage.json' });
+const storage = new Storage({
+  projectId: process.env.PROJECT_ID,
+  credentials: {
+    client_email: process.env.CLIENT_EMAIL,
+    private_key: process.env.PRIVATE_KEY,
+  },
+});
 const bucketName = process.env.GCP_BUCKET_NAME as string;
 const bucket = storage.bucket(bucketName);
 

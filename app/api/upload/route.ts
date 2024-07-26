@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
     }
 
     for (const [key, file] of Object.entries(files)) {
-      const fileName = `${file.name}_${Date.now()}`;
+      const fileName = `${Date.now()}_${file.name}`;
 
       // Convert the file to a readable stream
       const buffer = Buffer.from(await file.arrayBuffer());
@@ -45,8 +45,8 @@ export async function POST(req: NextRequest) {
       await uploadFileStream(stream, `uploaded_documents/${fileName}`);
 
       // Get the public URL
-      const publicUrl = getPublicUrl(fileName);
-      urls[`${key}_url`] = publicUrl;
+      //const publicUrl = getPublicUrl(fileName);
+      urls[`${key}_url`] = fileName;
     }
 
     return NextResponse.json(urls);
