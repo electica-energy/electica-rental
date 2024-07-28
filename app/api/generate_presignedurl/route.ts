@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
     const preSignedUrls = await Promise.all(
       fileInfos?.map(async (fileInfo: any) => {
         const finalFilename = `${Date.now()}_${fileInfo.filename}`
-        const url = await generatePreSignedUrl(fileInfo.filename, fileInfo.contentType);
+        const url = await generatePreSignedUrl(finalFilename, fileInfo.contentType);
 
         return {
           preSignedUrl: url,
