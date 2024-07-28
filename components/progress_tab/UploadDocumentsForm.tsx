@@ -4,7 +4,13 @@ import coverImg from "/public/static/images/others/cover.jpg";
 import { useState } from "react";
 import Spinner from "../ui/Spinner";
 
-function UploadDocumentsForm({ userForm, setUserForm, selectedFiles, setSelectedFiles }: any) {
+function UploadDocumentsForm({
+  userForm,
+  setUserForm,
+  selectedFiles,
+  setSelectedFiles,
+  handleStepChange
+}: any) {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleFilesUpload = async () => {
@@ -20,38 +26,77 @@ function UploadDocumentsForm({ userForm, setUserForm, selectedFiles, setSelected
 
     setIsLoading(true);
 
-    const formData = new FormData();
-    formData.append("profile_pic", selectedFiles?.profile_pic!);
-    formData.append("aadhar_front", selectedFiles?.aadhar?.front!);
-    formData.append("aadhar_back", selectedFiles?.aadhar?.back!);
-    formData.append("pan", selectedFiles?.pan!);
-    formData.append("dl_front", selectedFiles?.dl?.front!);
-    formData.append("dl_back", selectedFiles?.dl?.back!);
+    const fileInfos: any = [];
+    fileInfos.push({
+      file: selectedFiles?.profile_pic,
+      filename: selectedFiles?.profile_pic?.name,
+      documentType: "profile_pic",
+      contentType: selectedFiles?.profile_pic?.type
+    });
+    fileInfos.push({
+      file: selectedFiles?.aadhar?.front,
+      filename: selectedFiles?.aadhar?.front?.name,
+      documentType: "aadhar_front",
+      contentType: selectedFiles?.aadhar?.front?.type
+    });
+    fileInfos.push({
+      file: selectedFiles?.aadhar?.back,
+      filename: selectedFiles?.aadhar?.back?.name,
+      documentType: "aadhar_back",
+      contentType: selectedFiles?.aadhar?.back?.type
+    });
+    fileInfos.push({
+      file: selectedFiles?.pan,
+      filename: selectedFiles?.pan?.name,
+      documentType: "pan",
+      contentType: selectedFiles?.pan?.type
+    });
+    fileInfos.push({
+      file: selectedFiles?.dl?.front,
+      filename: selectedFiles?.dl?.front?.name,
+      documentType: "dl_front",
+      contentType: selectedFiles?.dl?.front?.type
+    });
+    fileInfos.push({
+      file: selectedFiles?.dl?.back,
+      filename: selectedFiles?.dl?.back?.name,
+      documentType: "dl_back",
+      contentType: selectedFiles?.dl?.back?.type
+    });
 
     try {
-      const response = await fetch("/api/upload", {
+      const response = await fetch("/api/generate_presignedurl", {
         method: "POST",
-        body: formData,
+        body: JSON.stringify({ fileInfos: fileInfos?.map((fileInfo: any) => ({filename: fileInfo.filename, documentType: fileInfo.documentType, contentType: fileInfo.contentType})) }),
       });
 
       if (response.ok) {
         const data = await response.json();
+
+        data?.preSignedUrls?.map(async (dataInfo: any) => {
+          await uploadFile(fileInfos?.find((fileInfo: any) => fileInfo.documentType === dataInfo.documentType).file, dataInfo.preSignedUrl);
+
+        });
+
         setIsLoading(false);
 
         setUserForm((prev: any) => {
           return {
             ...prev,
-            profile_pic_url: data?.profile_pic_url,
+            profile_pic_url: data?.preSignedUrls?.find((fileInfo: any) => fileInfo.documentType === 'profile_pic')?.filename,
             uploaded_documents: {
               aadhar: {
-                front: data?.aadhar_front_url,
-                back: data?.aadhar_back_url,
+                front: data?.preSignedUrls?.find((fileInfo: any) => fileInfo.documentType === 'aadhar_front')?.filename,
+                back: data?.preSignedUrls?.find((fileInfo: any) => fileInfo.documentType === 'aadhar_back')?.filename,
               },
-              pan: data?.pan_url,
-              dl: { front: data?.dl_front_url, back: data?.dl_back_url },
+              pan: data?.preSignedUrls?.find((fileInfo: any) => fileInfo.documentType === 'pan')?.filename,
+              dl: { front: data?.preSignedUrls?.find((fileInfo: any) => fileInfo.documentType === 'dl_front')?.filename, back: data?.preSignedUrls?.find((fileInfo: any) => fileInfo.documentType === 'dl_back')?.filename },
             },
           };
         });
+
+        handleStepChange(3);
+
       } else {
         console.error("Error uploading file");
       }
@@ -59,6 +104,29 @@ function UploadDocumentsForm({ userForm, setUserForm, selectedFiles, setSelected
       console.error("Error uploading file:", error);
     }
   };
+
+  // Function to upload file using pre-signed URL
+  async function uploadFile(file: any, preSignedUrl: string) {
+    try {
+      const fileData = await file.arrayBuffer();
+      const response = await fetch(preSignedUrl, {
+        method: "PUT",
+        body: fileData,
+        headers: {
+          "Content-Type": file.type,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Upload failed with status ${response.status}`);
+      }
+
+      return response;
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      throw error;
+    }
+  }
 
   return (
     <div className="2xl:col-span-4 xl:col-span-5 2xl:mt-24">

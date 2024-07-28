@@ -1,14 +1,13 @@
 import { Storage } from "@google-cloud/storage";
-import { PassThrough, Readable } from "stream";
-import { AbortController } from "abort-controller";
 
 const storage = new Storage({
   projectId: process.env.PROJECT_ID,
   credentials: {
     client_email: process.env.CLIENT_EMAIL,
-    private_key: process.env.PRIVATE_KEY,
+    private_key: process.env.PRIVATE_KEY!.replace(/\\n/g, "\n"),
   },
 });
+
 const bucketName = process.env.GCP_BUCKET_NAME as string;
 const bucket = storage.bucket(bucketName);
 
@@ -24,47 +23,29 @@ interface SignedUrlConfig {
  *
  * @param {string} fileName - The name of the file.
  * @param {'read' | 'write'} [action='read'] - The desired access action.
- * @param {string} [contentType='image/jpeg'] - The content type of the file.
- * @returns {Promise<string | undefined>} - The signed URL or undefined if the file doesn't exist.
+ * @param {string} [contentType='application/octet-stream'] - The content type of the file.
+ * @returns {Promise<string>} - The signed URL.
  */
 export async function getSignedUrl(
   fileName: string,
   action: "read" | "write" = "read",
-  contentType: string = "image/jpeg"
-): Promise<string | undefined> {
+  contentType: string = "application/octet-stream"
+): Promise<string> {
   try {
-    const [fileExists] = await bucket.file(fileName).exists();
-    if (!fileExists) {
-      return undefined;
+    if (action === "read") {
+      const [fileExists] = await bucket.file(fileName).exists();
+      if (!fileExists) {
+        throw new Error("File does not exist");
+      }
     }
 
-    const readConfig: SignedUrlConfig = {
+    const config: SignedUrlConfig = {
       version: "v4",
-      action: "read",
-      expires: Date.now() + 60 * 60 * 1000, // 1 hour
+      action,
+      expires:
+        Date.now() + (action === "read" ? 60 * 60 * 1000 : 15 * 60 * 1000), // 1 hour for read, 15 minutes for write
+      contentType: action === "write" ? contentType : undefined,
     };
-
-    const writeConfig: SignedUrlConfig = {
-      version: "v4",
-      action: "write",
-      expires: Date.now() + 15 * 60 * 1000, // 15 minutes
-      contentType,
-    };
-
-    const config = action === "read" ? readConfig : writeConfig;
-
-    await bucket.setCorsConfiguration([
-      {
-        maxAgeSeconds: 3600,
-        method: ["PUT", "GET", "HEAD", "DELETE", "POST", "OPTIONS"],
-        origin: ["*"],
-        responseHeader: [
-          "Content-Type",
-          "Access-Control-Allow-Origin",
-          "x-goog-resumable",
-        ],
-      },
-    ]);
 
     const [signedUrl] = await bucket.file(fileName).getSignedUrl(config);
     return signedUrl;
@@ -78,76 +59,15 @@ export async function getSignedUrl(
  * Gets a signed URL for image uploads.
  *
  * @param {string} fileName - The name of the file.
- * @param {string} fileType - The type of the file.
+ * @param {string} [fileType='application/octet-stream'] - The type of the file.
  * @returns {Promise<string>} - The signed URL for uploading.
  */
 export async function getSignedUrlUpload(
   fileName: string,
-  fileType: string = "image/jpeg"
+  fileType: string = "application/octet-stream"
 ): Promise<string> {
   const url = await getSignedUrl(fileName, "write", fileType);
-  return url!;
-}
-
-/**
- * Uploads a file to Google Cloud Storage.
- *
- * @param {string} filePath - The local path to the file.
- * @param {string} destination - The destination path in the bucket.
- * @returns {Promise<void>}
- */
-export async function uploadFile(
-  filePath: string,
-  destination: string
-): Promise<void> {
-  try {
-    await bucket.upload(filePath, {
-      destination,
-      contentType: "image/jpeg",
-      public: true,
-    });
-    console.log(`${filePath} uploaded to ${destination}`);
-  } catch (error) {
-    console.error("Error uploading file:", error);
-    throw error;
-  }
-}
-
-/**
- * Uploads a file stream to Google Cloud Storage.
- *
- * @param {Readable} fileStream - The file stream.
- * @param {string} fileName - The name of the file.
- * @returns {Promise<void>}
- */
-export async function uploadFileStream(stream: Readable, filePath: string): Promise<void> {
-  const controller = new AbortController();
-  const signal = controller.signal;
-
-  const passThrough = new PassThrough();
-
-  stream.pipe(passThrough);
-
-  return new Promise((resolve, reject) => {
-    const file = bucket.file(filePath);
-    const writeStream = file.createWriteStream({
-      resumable: true,
-      validation: "crc32c",
-      metadata: {
-        contentType: "application/octet-stream",
-      },
-    });
-
-    passThrough.pipe(writeStream).on("finish", resolve).on("error", reject);
-
-    // Manually abort the stream on signal
-    signal.addEventListener("abort", () => {
-      writeStream.destroy(new Error("Upload aborted"));
-    });
-
-    // Optional: Abort the request after a timeout
-    setTimeout(() => controller.abort(), 60000);
-  });
+  return url;
 }
 
 /**
@@ -158,4 +78,29 @@ export async function uploadFileStream(stream: Readable, filePath: string): Prom
  */
 export function getPublicUrl(fileName: string): string {
   return `https://storage.googleapis.com/${bucketName}/${fileName}`;
+}
+
+// Function to generate a pre-signed URL for uploading a file
+export async function generatePreSignedUrl(
+  fileName: string,
+  contentType: string = "application/octet-stream"
+): Promise<string> {
+  const bucket = storage.bucket(bucketName);
+  const file = bucket.file(`uploaded_documents/${fileName}`);
+
+  try {
+    const options: any = {
+      version: "v4",
+      action: "write",
+      expires: Date.now() + 15 * 60 * 1000, // 15 minutes
+      contentType, // Use the provided content type
+    };
+
+    const [url] = await file.getSignedUrl(options);
+
+    return url;
+  } catch (error) {
+    console.error("Error generating signed URL:", error);
+    throw error;
+  }
 }

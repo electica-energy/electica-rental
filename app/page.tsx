@@ -43,8 +43,8 @@ function SignIn() {
   const [selectedFiles, setSelectedFiles] = useState(sampleFileForm);
 
   return (
-    <section className="bg-white dark:bg-darkblack-500 overflow-hidden">
-      <div className="flex flex-col lg:flex-row justify-between h-screen overflow-hidden">
+    <section className="bg-white dark:bg-darkblack-500 lg:overflow-hidden">
+      <div className="flex flex-col lg:flex-row justify-between h-screen lg:overflow-hidden">
         <LeftSide
           userForm={userForm}
           setUserForm={setUserForm}
