@@ -42,7 +42,7 @@ function PreviewPayment({ userForm, setUserForm }: any) {
 
   const processPayment = async (orderId: string, userForm: any) => {
     setIsLoading(true);
-    console.log(orderId);
+    //console.log(orderId, process.env.key_id);
     try {
       const options = {
         key: process.env.key_id,
