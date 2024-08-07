@@ -340,12 +340,13 @@ function PreviewPayment({ userForm, setUserForm }: any) {
                 !userForm?.vehicle_number ||
                 !userForm.vehicle_name ||
                 !userForm.vehicle_number ||
+                !userForm.vin_number ||
                 !userForm.profile_pic_url ||
                 !userForm.uploaded_documents?.aadhar?.front ||
                 !userForm.uploaded_documents?.aadhar?.back ||
-                !userForm.uploaded_documents?.pan ||
-                !userForm.uploaded_documents?.dl?.front ||
-                !userForm.uploaded_documents?.dl?.back
+                !userForm.uploaded_documents?.pan
+                // !userForm.uploaded_documents?.dl?.front ||
+                // !userForm.uploaded_documents?.dl?.back
               }
               onClick={async (e) => {
                 //handleStepChange(2, userForm);

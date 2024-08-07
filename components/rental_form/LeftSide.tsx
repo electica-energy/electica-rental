@@ -58,7 +58,8 @@ function LeftSide({
         userForm.address.landmark &&
         userForm.address.pincode &&
         userForm.vehicle_name &&
-        userForm.vehicle_number
+        userForm.vehicle_number &&
+        userForm.vin_number
       ) {
         setCurrentTab(step_id);
 
@@ -88,14 +89,28 @@ function LeftSide({
         userForm.address.pincode &&
         userForm.vehicle_name &&
         userForm.vehicle_number &&
+        userForm.vin_number &&
         userForm.profile_pic_url &&
         userForm.uploaded_documents?.aadhar?.front &&
         userForm.uploaded_documents?.aadhar?.back &&
-        userForm.uploaded_documents?.pan &&
-        userForm.uploaded_documents?.dl?.front &&
-        userForm.uploaded_documents?.dl?.back
+        userForm.uploaded_documents?.pan
       ) {
         setCurrentTab(step_id);
+
+        setSteps((prev) =>
+          prev.map((step) => {
+            if (step.id === 3) {
+              return { ...step, status: "current" };
+            } else if (step.id === 2) {
+              return {
+                ...step,
+                status: "complete",
+              };
+            } else {
+              return step;
+            }
+          })
+        );
       }
     } else {
       setCurrentTab(step_id);

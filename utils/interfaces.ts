@@ -25,5 +25,6 @@ export interface SampleForm {
   verified_through: string;
   vehicle_name: string;
   vehicle_number: string;
+  vin_number: string;
   uploaded_documents: DocumentTypes;
 }

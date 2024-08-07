@@ -24,6 +24,7 @@ const initialFormState: SampleForm = {
   verified_through: "manually",
   vehicle_name: "",
   vehicle_number: "",
+  vin_number: "",
   uploaded_documents: {
     aadhar: { front: "", back: "" },
     pan: { front: "" },

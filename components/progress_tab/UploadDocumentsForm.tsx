@@ -9,7 +9,7 @@ function UploadDocumentsForm({
   setUserForm,
   selectedFiles,
   setSelectedFiles,
-  handleStepChange
+  handleStepChange,
 }: any) {
   const [isLoading, setIsLoading] = useState(false);
 
@@ -18,9 +18,9 @@ function UploadDocumentsForm({
       !selectedFiles?.profile_pic ||
       !selectedFiles?.aadhar?.front ||
       !selectedFiles?.aadhar?.back ||
-      !selectedFiles?.pan ||
-      !selectedFiles?.dl?.front ||
-      !selectedFiles?.dl?.back
+      !selectedFiles?.pan
+      // !selectedFiles?.dl?.front ||
+      // !selectedFiles?.dl?.back
     )
       return;
 
@@ -31,72 +31,109 @@ function UploadDocumentsForm({
       file: selectedFiles?.profile_pic,
       filename: selectedFiles?.profile_pic?.name,
       documentType: "profile_pic",
-      contentType: selectedFiles?.profile_pic?.type
+      contentType: selectedFiles?.profile_pic?.type,
     });
     fileInfos.push({
       file: selectedFiles?.aadhar?.front,
       filename: selectedFiles?.aadhar?.front?.name,
       documentType: "aadhar_front",
-      contentType: selectedFiles?.aadhar?.front?.type
+      contentType: selectedFiles?.aadhar?.front?.type,
     });
     fileInfos.push({
       file: selectedFiles?.aadhar?.back,
       filename: selectedFiles?.aadhar?.back?.name,
       documentType: "aadhar_back",
-      contentType: selectedFiles?.aadhar?.back?.type
+      contentType: selectedFiles?.aadhar?.back?.type,
     });
     fileInfos.push({
       file: selectedFiles?.pan,
       filename: selectedFiles?.pan?.name,
       documentType: "pan",
-      contentType: selectedFiles?.pan?.type
+      contentType: selectedFiles?.pan?.type,
     });
-    fileInfos.push({
-      file: selectedFiles?.dl?.front,
-      filename: selectedFiles?.dl?.front?.name,
-      documentType: "dl_front",
-      contentType: selectedFiles?.dl?.front?.type
-    });
-    fileInfos.push({
-      file: selectedFiles?.dl?.back,
-      filename: selectedFiles?.dl?.back?.name,
-      documentType: "dl_back",
-      contentType: selectedFiles?.dl?.back?.type
-    });
+
+    if (selectedFiles?.dl?.front) {
+      fileInfos.push({
+        file: selectedFiles?.dl?.front,
+        filename: selectedFiles?.dl?.front?.name,
+        documentType: "dl_front",
+        contentType: selectedFiles?.dl?.front?.type,
+      });
+    }
+
+    if (selectedFiles?.dl?.back) {
+      fileInfos.push({
+        file: selectedFiles?.dl?.back,
+        filename: selectedFiles?.dl?.back?.name,
+        documentType: "dl_back",
+        contentType: selectedFiles?.dl?.back?.type,
+      });
+    }
 
     try {
       const response = await fetch("/api/generate_presignedurl", {
         method: "POST",
-        body: JSON.stringify({ fileInfos: fileInfos?.map((fileInfo: any) => ({filename: fileInfo.filename, documentType: fileInfo.documentType, contentType: fileInfo.contentType})) }),
+        body: JSON.stringify({
+          fileInfos: fileInfos?.map((fileInfo: any) => ({
+            filename: fileInfo.filename,
+            documentType: fileInfo.documentType,
+            contentType: fileInfo.contentType,
+          })),
+        }),
       });
 
       if (response.ok) {
         const data = await response.json();
 
         data?.preSignedUrls?.map(async (dataInfo: any) => {
-          await uploadFile(fileInfos?.find((fileInfo: any) => fileInfo.documentType === dataInfo.documentType).file, dataInfo.preSignedUrl);
-
+          await uploadFile(
+            fileInfos?.find(
+              (fileInfo: any) => fileInfo.documentType === dataInfo.documentType
+            ).file,
+            dataInfo.preSignedUrl
+          );
         });
 
         setIsLoading(false);
 
         setUserForm((prev: any) => {
-          return {
+          const updatedData = {
             ...prev,
-            profile_pic_url: data?.preSignedUrls?.find((fileInfo: any) => fileInfo.documentType === 'profile_pic')?.filename,
+            profile_pic_url: data?.preSignedUrls?.find(
+              (fileInfo: any) => fileInfo.documentType === "profile_pic"
+            )?.filename,
             uploaded_documents: {
               aadhar: {
-                front: data?.preSignedUrls?.find((fileInfo: any) => fileInfo.documentType === 'aadhar_front')?.filename,
-                back: data?.preSignedUrls?.find((fileInfo: any) => fileInfo.documentType === 'aadhar_back')?.filename,
+                front: data?.preSignedUrls?.find(
+                  (fileInfo: any) => fileInfo.documentType === "aadhar_front"
+                )?.filename,
+                back: data?.preSignedUrls?.find(
+                  (fileInfo: any) => fileInfo.documentType === "aadhar_back"
+                )?.filename,
               },
-              pan: data?.preSignedUrls?.find((fileInfo: any) => fileInfo.documentType === 'pan')?.filename,
-              dl: { front: data?.preSignedUrls?.find((fileInfo: any) => fileInfo.documentType === 'dl_front')?.filename, back: data?.preSignedUrls?.find((fileInfo: any) => fileInfo.documentType === 'dl_back')?.filename },
+              pan: data?.preSignedUrls?.find(
+                (fileInfo: any) => fileInfo.documentType === "pan"
+              )?.filename,
+              dl: {
+                front: "",
+                back: ""
+              },
             },
           };
+
+          if(data?.preSignedUrls?.find(
+            (fileInfo: any) => fileInfo.documentType === "dl_front"
+          )){
+            updatedData.dl.front = data?.preSignedUrls?.find((fileInfo: any) => fileInfo.documentType === "dl_front")?.filename
+          };
+
+          if(data?.preSignedUrls?.find((fileInfo: any) => fileInfo.documentType === "dl_back")){
+            updatedData.dl.back = data?.preSignedUrls?.find((fileInfo: any) => fileInfo.documentType === "dl_back")?.filename
+          }
+          return updatedData;
         });
 
         handleStepChange(3);
-
       } else {
         console.error("Error uploading file");
       }
@@ -383,7 +420,7 @@ function UploadDocumentsForm({
 
       <div className="mt-4">
         <h4 className="font-bold text-lg text-bgray-800 dark:text-white">
-          {"Driving License (Front & Back)"}
+          {"Driving License (Front & Back) - Optional"}
         </h4>
         <p className="mb-4 text-bgray-500 dark:text-bgray-50">
           Cover of at least Size
@@ -510,14 +547,14 @@ function UploadDocumentsForm({
               !selectedFiles?.aadhar?.front ||
               !selectedFiles?.aadhar?.back ||
               !selectedFiles?.pan ||
-              !selectedFiles?.dl?.front ||
-              !selectedFiles?.dl?.back ||
+              // !selectedFiles?.dl?.front ||
+              // !selectedFiles?.dl?.back ||
               (userForm.profile_pic_url &&
                 userForm.uploaded_documents?.aadhar?.front &&
                 userForm.uploaded_documents?.aadhar?.back &&
-                userForm.uploaded_documents?.pan &&
-                userForm.uploaded_documents?.dl?.front &&
-                userForm.uploaded_documents?.dl?.back)
+                userForm.uploaded_documents?.pan)
+              // userForm.uploaded_documents?.dl?.front &&
+              // userForm.uploaded_documents?.dl?.back
             }
           >
             {isLoading ? (
@@ -525,9 +562,9 @@ function UploadDocumentsForm({
             ) : userForm.profile_pic_url &&
               userForm.uploaded_documents?.aadhar?.front &&
               userForm.uploaded_documents?.aadhar?.back &&
-              userForm.uploaded_documents?.pan &&
-              userForm.uploaded_documents?.dl?.front &&
-              userForm.uploaded_documents?.dl?.back ? (
+              userForm.uploaded_documents?.pan ? (
+              // userForm.uploaded_documents?.dl?.front &&
+              // userForm.uploaded_documents?.dl?.back
               "File Uploaded!"
             ) : (
               "Upload & Continue"
